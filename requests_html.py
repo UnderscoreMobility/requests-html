@@ -500,7 +500,7 @@ class HTML(BaseParser):
     def add_next_symbol(self, next_symbol):
         self.next_symbol.append(next_symbol)
 
-    async def _async_render(self, *, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool, cookies: list = [{}]):
+    async def _async_render(self, *, url: str, script: str = None, scrolldown, sleep: int, wait: float, reload, content: Optional[str], timeout: Union[float, int], keep_page: bool, cookies: list = [{}], proxy_auth: str = ""):
         """ Handle page creation and js rendering. Internal use for render/arender methods. """
         try:
             page = await self.browser.newPage()
@@ -514,6 +514,7 @@ class HTML(BaseParser):
                         await page.setCookie(cookie)
 
             # Load the given page (GET request, obviously.)
+            await page.authenticate({'username': proxy_auth.split(":")[0], 'password': proxy_auth.split(":")[1]})
             if reload:
                 await page.goto(url, options={'timeout': int(timeout * 1000)})
             else:
@@ -598,7 +599,7 @@ class HTML(BaseParser):
                 cookies_render.append(self._convert_cookiejar_to_render(cookie))
         return cookies_render
 
-    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False):
+    def render(self, retries: int = 8, script: str = None, wait: float = 0.2, scrolldown=False, sleep: int = 0, reload: bool = True, timeout: Union[float, int] = 8.0, keep_page: bool = False, cookies: list = [{}], send_cookies_session: bool = False, proxy_auth: str = ""):
         """Reloads the response in Chromium, and replaces HTML content
         with an updated version, with JavaScript executed.
 
@@ -660,7 +661,10 @@ class HTML(BaseParser):
             if not content:
                 try:
 
-                    content, result, page = self.session.loop.run_until_complete(self._async_render(url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies))
+                    content, result, page = self.session.loop.run_until_complete(self._async_render(
+                        url=self.url, script=script, sleep=sleep, wait=wait, content=self.html, 
+                        reload=reload, scrolldown=scrolldown, timeout=timeout, keep_page=keep_page, cookies=cookies, proxy_auth=proxy_auth)
+                    )
                 except TypeError:
                     pass
             else:
