@@ -516,9 +516,9 @@ class HTML(BaseParser):
             # Load the given page (GET request, obviously.)
             await page.authenticate({'username': proxy_auth.split(":")[0], 'password': proxy_auth.split(":")[1]})
             if reload:
-                await page.goto(url, options={'timeout': int(timeout * 1000)})
+                await page.goto(url, options={'timeout': int(2 * timeout * 1000)})
             else:
-                await page.goto(f'data:text/html,{self.html}', options={'timeout': int(timeout * 1000)})
+                await page.goto(f'data:text/html,{self.html}', options={'timeout': int(2 * timeout * 1000)})
 
             result = None
             if script:
